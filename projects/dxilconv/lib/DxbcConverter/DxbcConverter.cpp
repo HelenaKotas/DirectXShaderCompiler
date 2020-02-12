@@ -1,4 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
 // DxbcConverter.cpp                                                         //
 // Copyright (C) Microsoft Corporation. All rights reserved.                 //
@@ -3647,6 +3648,8 @@ void DxbcConverter::ConvertInstructions(D3D10ShaderBinary::CShaderCodeParser &Pa
       const unsigned uOpOutput = 0;
       const unsigned uOpUAV = uOpOutput + 1;
       bool bInc = Inst.OpCode() == D3D11_SB_OPCODE_IMM_ATOMIC_ALLOC;
+      // SetHasCounter.
+      SetHasCounter(Inst, uOpUAV);
 
       // Resource.
       OperandValue InRes;
@@ -5705,6 +5708,18 @@ Value *DxbcConverter::LoadConstFloat(float& fVal) {
   }
 }
 
+void DxbcConverter::SetHasCounter(D3D10ShaderBinary::CInstruction &Inst, const unsigned uOpUAV) {
+  D3D10ShaderBinary::COperandBase &O = Inst.m_Operands[uOpUAV];
+  DXASSERT_DXBC(O.m_Type == D3D11_SB_OPERAND_TYPE_UNORDERED_ACCESS_VIEW);
+
+  // Retrieve UAV range ID and record.
+  DXASSERT_DXBC(O.m_IndexType[0] == D3D10_SB_OPERAND_INDEX_IMMEDIATE32);
+  unsigned RangeID = O.m_Index[0].m_RegIndex;
+  unsigned RecIdx = m_UAVRangeMap[RangeID];
+  DxilResource &R = m_pPR->GetUAV(RecIdx);
+  R.SetHasCounter(true);
+}
+
 void DxbcConverter::LoadOperand(OperandValue &SrcVal,
                                 D3D10ShaderBinary::CInstruction &Inst,
                                 const unsigned OpIdx,
@@ -6363,6 +6378,7 @@ void DxbcConverter::LoadOperand(OperandValue &SrcVal,
   case D3D11_SB_OPERAND_TYPE_INPUT_JOIN_INSTANCE_ID: {
     Scope &HullScope = m_ScopeStack.FindParentHullLoop();
     Value *pValue = m_pBuilder->CreateLoad(HullScope.pInductionVar);
+    pValue = ApplyOperandModifiers(pValue, O);
 
     for (OperandValueHelper OVH(SrcVal, Mask, O); !OVH.IsDone(); OVH.Advance()) {
       OVH.SetValue(pValue);

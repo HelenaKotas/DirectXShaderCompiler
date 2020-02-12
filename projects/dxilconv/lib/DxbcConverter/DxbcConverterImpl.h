@@ -604,6 +604,7 @@ protected:
 
   void CheckDxbcString(const char *pStr, const void *pMaxPtrInclusive);
 
+  void SetHasCounter(D3D10ShaderBinary::CInstruction &Inst, const unsigned uOpUAV);
   Value *LoadConstFloat(float& fVal);
   void LoadOperand(OperandValue &SrcVal, D3D10ShaderBinary::CInstruction &Inst, const unsigned OpIdx, const CMask &Mask, const CompType &ValueType);
   const DxilResource& LoadSRVOperand(OperandValue &SrcVal, D3D10ShaderBinary::CInstruction &Inst, const unsigned OpIdx, const CMask &Mask, const CompType &ValueType);
