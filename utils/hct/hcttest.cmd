@@ -203,10 +203,12 @@ if "%GENERATOR_NINJA%"=="1" (
   set TEST_DIR=%HLSL_BLD_DIR%\%BUILD_CONFIG%\test
 )
 
+if "%DXILCONV_LOC%"=="" ( 
+  set DXILCONV_LOC=%BIN_DIR%
+)
 if "%TEST_DXILCONV%"=="1" (
-  if "%DXILCONV_LOC%"=="" ( set DXILCONV_LOC=%BIN_DIR%\dxilconv.dll )
-  if not exist "%DXILCONV_LOC%" (
-    echo Skipping dxilconv tests, dxilconv.dll not found.
+  if not exist "%DXILCONV_LOC%\dxilconv.dll" (
+    echo Skipping dxilconv tests, dxilconv.dll not found at %DXILCONV_LOC%.
     set TEST_DXILCONV=0
   )
 )
